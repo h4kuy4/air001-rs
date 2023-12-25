@@ -76,5 +76,4 @@ Reset_Handler:
 
 .thumb_func
 HardFault_Handler:
-    b fault
     b inf_loop

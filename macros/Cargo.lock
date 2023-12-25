@@ -3,13 +3,6 @@
 version = 3
 
 [[package]]
-name = "air001-rs"
-version = "0.1.0"
-dependencies = [
- "air001-rs-macros",
-]
-
-[[package]]
 name = "air001-rs-macros"
 version = "0.1.0"
 dependencies = [
