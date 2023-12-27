@@ -7,18 +7,23 @@
     };
 
     outputs = { self, nixpkgs, rust-overlay, ... }: let
-        system = "x86_64-linux";
-    in {
-        devShells."${system}" = {
-            default = let
-                pkgs = import nixpkgs {
-                    inherit system;
+        supportedSystems = [
+            "x86_64-linux"
+            "aarch64-linux"
+            "aarch64-darwin"
+        ];
 
-                    overlays = [
-                        (import rust-overlay) 
-                    ];
-                };
-            in pkgs.mkShell {
+        forAllSystems = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
+            pkgs = import nixpkgs { 
+                inherit system; 
+                overlays = [ 
+                    (import rust-overlay)
+                ];
+            };
+        });
+    in {
+        devShells = forAllSystems ({pkgs}: {
+            default = pkgs.mkShell {
                 packages = with pkgs; [
                     openssl
                     pkg-config
@@ -35,6 +40,6 @@
                     exec fish
                 '';
             };
-        };
+        });
     };
 }
