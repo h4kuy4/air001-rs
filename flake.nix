@@ -1,5 +1,5 @@
 {
-    description = "A Nix-flake-based development environment for Kage tunnel";
+    description = "A development environment for Rust on Air001";
 
     inputs = {
         nixpkgs.url      = "github:NixOS/nixpkgs/nixos-23.11";
