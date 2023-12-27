@@ -8,6 +8,7 @@ pub mod vectors;
 pub mod register;
 pub mod gpio;
 pub mod panic;
+pub mod rcc;
 
 pub use macros::entry;
 

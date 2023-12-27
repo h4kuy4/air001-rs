@@ -1,8 +1,7 @@
 #![no_main]
 #![no_std]
 
-use air001_rs::entry;
-use air001_rs::gpio::{GpioBuilder, Port, Pin, PinMode, PinLevel};
+use air001_rs::{entry, gpio::{Gpio, Port, Output}};
 
 
 #[entry]
@@ -13,11 +12,9 @@ fn main() -> ! {
         (*rcc_iopenr) = 0b00_00_00_11;
     }
 
-    let mut led = GpioBuilder::new(Port::GPIOB, Pin::Pin1)
-        .mode(PinMode::Output)
-        .build();
+    let mut led: Gpio<Output, 0> = Gpio::<Output, 0>::new(Port::GPIOB);
 
-    led.set_level(PinLevel::High);
+    led.set();
 
     loop {
         

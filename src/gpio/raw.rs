@@ -12,7 +12,6 @@ pub struct Reg {
     pub pupdr:   RW<u32>,
     pub idr:     RO<u32>,
     pub odr:     RW<u32>,
-    pub bsr:     WO<u32>,
     pub bsrr:    WO<u32>,
     pub lckr:    RW<u32>,
     pub afrl:    RW<u32>,
@@ -40,23 +39,29 @@ impl GpioReg {
     }
 
     #[inline]
-    pub fn set_port_mode(&mut self, val: u32) {
-        let old_val = self.reg.moder.read();
+    pub fn set_output_type(&mut self, mask: u32, val: u32) {
+        let old_val = self.reg.otyper.read();
 
-        let val = old_val | val;
+        let val = (old_val ^ (old_val & mask)) | (val & mask);
 
-        self.reg.moder.write(val);
-    }
-
-    pub fn set_output_type(&mut self, val: u32) {
         self.reg.otyper.write(val);
     }
 
-    pub fn set_output_speed(&mut self, val: u32) {
+    #[inline]
+    pub fn set_output_speed(&mut self, mask: u32, val: u32) {
+        let old_val = self.reg.ospeedr.read();
+
+        let val = (old_val ^ (old_val & mask)) | (val & mask);
+
         self.reg.ospeedr.write(val);
     }
 
-    pub fn set_pull_mode(&mut self, val: u32) {
+    #[inline]
+    pub fn set_pull_mode(&mut self, mask: u32, val: u32) {
+        let old_val = self.reg.pupdr.read();
+
+        let val = (old_val ^ (old_val & mask)) | (val & mask);
+
         self.reg.pupdr.write(val);
     }
 
@@ -70,58 +75,84 @@ impl GpioReg {
     }
 
     #[inline]
-    pub fn set_port_output_data(&mut self, val: u32) {
-        let old_val = self.reg.odr.read();
-
-        let val = old_val | val;
-
-        self.reg.odr.write(val);
-    }
-
-    pub fn bit_set_reset(&mut self, val: u32) {
+    pub fn bit_set(&mut self, val: u32) {
         self.reg.bsrr.write(val);
     }
 
-    pub fn set_lock(&mut self, val: u32) {
+    #[inline]
+    pub fn bit_reset(&mut self, val: u32) {
+        self.reg.brr.write(val);
+    }
+
+    #[inline]
+    pub fn set_lock(&mut self, mask: u32, val: u32) {
+        let old_val = self.reg.lckr.read();
+
+        let val = (old_val ^ (old_val & mask)) | (val & mask);
+
         self.reg.lckr.write(val);
     }
 
-    pub fn set_alt_func_l(&mut self, val: u32) {
+    #[inline]
+    pub fn set_alt_func_l(&mut self, mask: u32, val: u32) {
+        let old_val = self.reg.afrl.read();
+
+        let val = (old_val ^ (old_val & mask)) | (val & mask);
+
         self.reg.afrl.write(val);
     }
 
-    pub fn set_alt_func_h(&mut self, val: u32) {
+    #[inline]
+    pub fn set_alt_func_h(&mut self, mask: u32, val: u32) {
+        let old_val = self.reg.afrh.read();
+
+        let val = (old_val ^ (old_val & mask)) | (val & mask);
+
         self.reg.afrh.write(val);
     }
 
+    #[inline]
     pub fn get_mode(&self) -> u32 {
         self.reg.moder.read()
     }
 
+    #[inline]
     pub fn get_output_type(&self) -> u32 {
         self.reg.otyper.read()
     }
 
+    #[inline]
     pub fn get_output_speed(&self) -> u32 {
         self.reg.ospeedr.read()
     }
     
+    #[inline]
     pub fn get_pull_mode(&self) -> u32 {
         self.reg.pupdr.read()
     }
 
+
+    #[inline]
+    pub fn get_output_data(&self) -> u32 {
+        self.reg.odr.read()
+    }
+
+    #[inline]
     pub fn get_input_data(&self) -> u32 {
         self.reg.idr.read()
     }
 
+    #[inline]
     pub fn get_lock(&self) -> u32 {
         self.reg.lckr.read()
     }
 
+    #[inline]
     pub fn get_alt_func_l(&self) -> u32 {
         self.reg.afrl.read()
     }
 
+    #[inline]
     pub fn get_alt_func_h(&self) -> u32 {
         self.reg.afrh.read()
     }
