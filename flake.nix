@@ -30,6 +30,7 @@
                     rust-analyzer
                     gcc-arm-embedded
                     openocd
+                    fish
                     (probe-rs.override {
                         rustPlatform.buildRustPackage = 
                             args: rustPlatform.buildRustPackage (args // rec {
