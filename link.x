@@ -1,34 +1,110 @@
-__ROM_BASE = 0x08000000;
-__ROM_SIZE = 0x00008000;
-
-__RAM_BASE = 0x20000000;
-__RAM_SIZE = 0x00001000;
-
-__STACK_SIZE = 0x00000400;
-__HEAP_SIZE  = 0x00000000;
-
 MEMORY {
-    FLASH (rx)  : ORIGIN = __ROM_BASE, LENGTH = __ROM_SIZE
-    RAM   (rwx) : ORIGIN = __RAM_BASE, LENGTH = __RAM_SIZE
+    FLASH     (rx)  : ORIGIN = 0x08000000, LENGTH = 0x8000
+    RAM       (rwx) : ORIGIN = 0x20000000, LENGTH = 0x1000
 }
 
 /* Entry Point of program */
-ENTRY(Reset_Handler);
+ENTRY(Reset);
+
+EXTERN(DefaultHandler);
+EXTERN(__EXCEPTIONS);
+PROVIDE(NMI       = DefaultHandler);
+PROVIDE(HardFault = HardFault_);
+PROVIDE(SVCall    = DefaultHandler);
+PROVIDE(PendSV    = DefaultHandler);
+PROVIDE(SysTick   = DefaultHandler);
+
+EXTERN(__INTERRUPT);
+PROVIDE(WWDG                = DefaultHandler);
+PROVIDE(PVD                 = DefaultHandler);
+PROVIDE(RTC                 = DefaultHandler);
+PROVIDE(Flash               = DefaultHandler);
+PROVIDE(RCC                 = DefaultHandler);
+PROVIDE(EXTI0_1             = DefaultHandler);
+PROVIDE(EXTI2_3             = DefaultHandler);
+PROVIDE(EXTI4_15            = DefaultHandler);
+PROVIDE(DMA_Channel1        = DefaultHandler);
+PROVIDE(DMA_Channel2_3      = DefaultHandler);
+PROVIDE(ADC_COMP            = DefaultHandler);
+PROVIDE(TIM1_BRK_UP_TRG_COM = DefaultHandler);
+PROVIDE(TIM1_CC             = DefaultHandler);
+PROVIDE(TIM3                = DefaultHandler);
+PROVIDE(LPTIM1              = DefaultHandler);
+PROVIDE(TIM14               = DefaultHandler);
+PROVIDE(TIM16               = DefaultHandler);
+PROVIDE(TIM17               = DefaultHandler);
+PROVIDE(I2C1                = DefaultHandler);
+PROVIDE(SPI1                = DefaultHandler);
+PROVIDE(SPI2                = DefaultHandler);
+PROVIDE(USART1              = DefaultHandler);
+PROVIDE(USART2              = DefaultHandler);
+PROVIDE(LED                 = DefaultHandler);
 
 SECTIONS {
-    .text : {
-        _stack_top = ORIGIN(RAM) + LENGTH(RAM);
 
+    .vector_table ORIGIN(FLASH) : {
+        __vector_table = .;
+
+        PROVIDE(_stack_top = ORIGIN(RAM) + LENGTH(RAM));
         LONG(_stack_top)
-        KEEP(* (.isr_vec_table))
-        . = ALIGN(4);
 
-        *(.text)
-        . = ALIGN(4);
+        KEEP(*(.vector_table.reset_vector));
 
-        *(.rodata*)
-        . = ALIGN(4);
-        
-    } > FLASH  /* Put this in the flash memory region */
+        __exceptions = .;
+        KEEP(*(.vector_table.exceptions));
+        __eexceptions = .;
 
+        KEEP(*(.vector_table.interrupts));
+
+    }
+
+    PROVIDE(_stext = ADDR(.vector_table) + SIZEOF(.vector_table));
+
+    .text _stext : {
+        __stext = .;
+
+        *(.text .text.*);
+
+        . = ALIGN(4);
+        __etext = .;
+    } > FLASH
+
+    .data : ALIGN(4) {
+        . = ALIGN(4);
+        __srodata = .;
+
+        *(.rodata*);
+
+        . = ALIGN(4);
+        __erodata = .;
+    } > RAM
+    
+    .data : {
+        . = ALIGN(4);
+        __sdata = .;
+
+        *(.data .data.*);
+
+        . = ALIGN(4);
+        __edata = .;
+    } > RAM
+
+    _sidata = LOADADDR(.data);
+
+    .bss (NOLOAD) : ALIGN(4) {
+        . = ALIGN(4);
+        __sbss = .;
+
+        *(.bss .bss.*);
+        *(COMMON);
+
+        . = ALIGN(4);
+        __ebss = .;
+    } > RAM
+
+    /DISCARD/ : {
+        *(.ARM.exidx);
+        *(.ARM.exidx.*);
+        *(.ARM.extab.*);
+    }
 }

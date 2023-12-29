@@ -9,7 +9,9 @@ pub mod register;
 pub mod gpio;
 pub mod panic;
 pub mod rcc;
+pub mod timer;
 
 pub use macros::entry;
+pub use macros::exception;
 
 global_asm!(include_str!("startup.S"));
