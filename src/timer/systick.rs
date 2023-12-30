@@ -1,8 +1,6 @@
-use core::{arch::asm, ptr::NonNull};
+use core::ptr::NonNull;
 
-use volatile::{VolatileRef, VolatilePtr};
-
-use crate::register::{RW, RO};
+use volatile::VolatilePtr;
 
 const SYSTICK_LOAD_RELOAD_MSK: u32 = 0xFF_FFFF;
 

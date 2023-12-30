@@ -1,18 +1,7 @@
 #![no_main]
 #![no_std]
 
-use air001_rs::{entry, exception, gpio::{Gpio, Port, Output}, rcc::Rcc, timer::systick::{SysTick, ClockSource, SysTickBuilder}};
-
-#[exception("SysTick")]
-fn systick() -> ! {
-    let _rcc = Rcc::new()
-        .enable_port(Port::GPIOB);
-
-    let mut led: Gpio<Output, 3> = Gpio::<Output, 3>::new(Port::GPIOB);
-
-    led.toggle();
-}
-
+use air001_rs::{entry, gpio::{Port, Output, GpioBuilder}, rcc::RccBuilder, timer::systick::{ClockSource, SysTickBuilder}};
 
 #[entry]
 fn main() -> ! {
@@ -24,10 +13,12 @@ fn main() -> ! {
 
     sys_tick.enable();
 
-    let _rcc = Rcc::new()
-        .enable_port(Port::GPIOB);
+    let _rcc = RccBuilder::new()
+        .enable_port(Port::GPIOB)
+        .build();
 
-    let mut led: Gpio<Output, 0> = Gpio::<Output, 0>::new(Port::GPIOB);
+    let mut led = GpioBuilder::<Output, 0>::new(Port::GPIOB)
+        .build();
 
     led.toggle();
 
