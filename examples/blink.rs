@@ -1,7 +1,7 @@
 #![no_main]
 #![no_std]
 
-use air001_rs::{entry, exception, gpio::{Gpio, Port, Output}, rcc::Rcc, timer::systick::{SysTick, ClockSource}};
+use air001_rs::{entry, exception, gpio::{Gpio, Port, Output}, rcc::Rcc, timer::systick::{SysTick, ClockSource, SysTickBuilder}};
 
 #[exception("SysTick")]
 fn systick() -> ! {
@@ -16,10 +16,11 @@ fn systick() -> ! {
 
 #[entry]
 fn main() -> ! {
-    let mut sys_tick = SysTick::new()
+    let mut sys_tick = SysTickBuilder::new()
         .source(ClockSource::AHBDiv8)
         .disable_int()
-        .set_reload(8_000);
+        .set_reload(8_000)
+        .build();
 
     sys_tick.enable();
 

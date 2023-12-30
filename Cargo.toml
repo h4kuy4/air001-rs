@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 air001-rs-macros = { path = "macros" }
+volatile = "0.5.1"
 
 [[example]]
 name = "blink"

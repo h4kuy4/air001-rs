@@ -7,6 +7,7 @@ name = "air001-rs"
 version = "0.1.0"
 dependencies = [
  "air001-rs-macros",
+ "volatile",
 ]
 
 [[package]]
@@ -52,3 +53,9 @@ name = "unicode-ident"
 version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
+
+[[package]]
+name = "volatile"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9eaac9f9d9b7ae00cdd43e21b15e58ccacd903e6d29131d7536765a61969d25e"
