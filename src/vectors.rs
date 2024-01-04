@@ -1,4 +1,4 @@
-use crate::{rcc::RccBuilder, gpio::{Port, Output, GpioBuilder}};
+use crate::{rcc::RccBuilder, gpio::{Output, PinBuilder}};
 
 #[repr(C)]
 pub union Vector {
@@ -142,10 +142,10 @@ pub static __INTERRUPTS: [Vector; 32] = [
 #[no_mangle]
 pub extern "C" fn HardFault_() {
     let _rcc = RccBuilder::new()
-        .enable_port(Port::GPIOB)
+        .enable_port('B')
         .build();
 
-    let led = GpioBuilder::<Output, 1>::new(Port::GPIOB)
+    let led = PinBuilder::<Output, 'B', 1>::new()
         .build();
 
     led.set();

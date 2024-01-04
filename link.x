@@ -69,11 +69,11 @@ SECTIONS {
         __etext = .;
     } > FLASH
 
-    .data : ALIGN(4) {
+    .rodata : ALIGN(4) {
         . = ALIGN(4);
         __srodata = .;
 
-        *(.rodata*);
+        *(.rodata .rodata*);
 
         . = ALIGN(4);
         __erodata = .;

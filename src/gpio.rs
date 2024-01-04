@@ -4,18 +4,12 @@ use volatile::VolatilePtr;
 
 use crate::set_bit;
 
-pub enum Port {
-    GPIOA = 0x5000_0000,
-    GPIOB = 0x5000_0400,
-    GPIOF = 0x5000_1400,
-}
-
 pub struct Input;
 pub struct Output;
 pub struct AltFunc;
 pub struct Analog;
 
-pub struct Gpio<Mode, const PIN_NUM: u8> {
+pub struct Pin<Mode, const PORT_NUM: char, const PIN_NUM: u8> {
     moder:   VolatilePtr<'static, u32>,
     otyper:  VolatilePtr<'static, u32>,
     ospeedr: VolatilePtr<'static, u32>,
@@ -30,8 +24,8 @@ pub struct Gpio<Mode, const PIN_NUM: u8> {
     _mode: PhantomData<Mode>
 }
 
-pub struct GpioBuilder<Mode, const PIN_NUM: u8> {
-    reg: Gpio<Mode, PIN_NUM>
+pub struct PinBuilder<Mode, const PORT_NUM: char, const PIN_NUM: u8> {
+    reg: Pin<Mode, PORT_NUM, PIN_NUM>
 }
 
 pub enum PullMode {
@@ -40,12 +34,12 @@ pub enum PullMode {
     PullDown = 0b11
 }
 
-impl<Mode, const PIN_NUM: u8> Gpio<Mode, PIN_NUM> {
+impl<Mode, const PORT_NUM: char, const PIN_NUM: u8> Pin<Mode, PORT_NUM, PIN_NUM> {
     pub fn set_pull_mode(&self, mode: PullMode) {
     }
 }
 
-impl<const PIN_NUM: u8> Gpio<Input, PIN_NUM> {
+impl<const PORT_NUM: char, const PIN_NUM: u8> Pin<Input, PORT_NUM, PIN_NUM> {
     pub fn read(&mut self) -> bool {
         let val = self.idr.read();
 
@@ -69,7 +63,7 @@ pub enum OutputType {
     OpenDrain = 0b01 
 }
 
-impl<const PIN_NUM: u8> Gpio<Output, PIN_NUM> {
+impl<const PORT_NUM: char, const PIN_NUM: u8> Pin<Output, PORT_NUM, PIN_NUM> {
     pub fn set_speed(&self, speed: OutputSpeed) {
         self.ospeedr.update(|val| set_bit!(val, PIN_NUM * 2, 0b11, speed as u32));
     }
@@ -109,14 +103,40 @@ impl<const PIN_NUM: u8> Gpio<Output, PIN_NUM> {
     }
 }
 
-impl<const PIN_NUM: u8> Gpio<AltFunc, PIN_NUM> {
+pub enum AltFuncNum {
+    AF0  = 0b0000,
+    AF1  = 0b0001,
+    AF2  = 0b0010,
+    AF3  = 0b0011,
+    AF4  = 0b0100,
+    AF5  = 0b0101,
+    AF6  = 0b0110,
+    AF7  = 0b0111,
+    AF8  = 0b1000,
+    AF9  = 0b1001,
+    AF10 = 0b1010,
+    AF11 = 0b1011,
+    AF12 = 0b1100,
+    AF13 = 0b1101,
+    AF14 = 0b1110,
+    AF15 = 0b1111,
 }
 
-impl<const PIN_NUM: u8> Gpio<Analog, PIN_NUM> {
+impl<const PORT_NUM: char, const PIN_NUM: u8> Pin<AltFunc, PORT_NUM, PIN_NUM> {
+    pub fn set_func(&mut self, func: AltFuncNum) {
+        if PIN_NUM > 7 {
+            self.afrl.update(|val| set_bit!(val, PIN_NUM * 4, 0b1111, func as u32)); 
+        } else {
+            self.afrh.update(|val| set_bit!(val, PIN_NUM * 4, 0b1111, func as u32)); 
+        }
+    }
 }
 
-impl<Mode, const PIN_NUM: u8> GpioBuilder<Mode, PIN_NUM> {
-    pub fn build(self) -> Gpio<Mode, PIN_NUM> {
+impl<const PORT_NUM: char, const PIN_NUM: u8> Pin<Analog, PORT_NUM, PIN_NUM> {
+}
+
+impl<Mode, const PORT_NUM: char, const PIN_NUM: u8> PinBuilder<Mode, PORT_NUM, PIN_NUM> {
+    pub fn build(self) -> Pin<Mode, PORT_NUM, PIN_NUM> {
         self.reg
     }
 
@@ -127,13 +147,18 @@ impl<Mode, const PIN_NUM: u8> GpioBuilder<Mode, PIN_NUM> {
     }
 }
 
-impl<const PIN_NUM: u8> GpioBuilder<Input, PIN_NUM> {
-    pub fn new(port: Port) -> Self {
-        let base = port as u32;
+impl<const PORT_NUM: char, const PIN_NUM: u8> PinBuilder<Input, PORT_NUM, PIN_NUM> {
+    pub fn new() -> Self {
+        let base = match PORT_NUM {
+            'A' => 0x5000_0000,
+            'B' => 0x5000_0400,
+            'F' => 0x5000_1400,
+            _   => panic!()
+        };
 
         let builder = Self { 
             reg: unsafe {
-                Gpio {
+                Pin {
                     moder  : VolatilePtr::new(NonNull::new_unchecked((base + 0x00) as *mut u32)),
                     otyper : VolatilePtr::new(NonNull::new_unchecked((base + 0x04) as *mut u32)),
                     ospeedr: VolatilePtr::new(NonNull::new_unchecked((base + 0x08) as *mut u32)),
@@ -157,13 +182,18 @@ impl<const PIN_NUM: u8> GpioBuilder<Input, PIN_NUM> {
     }
 }
 
-impl<const PIN_NUM: u8> GpioBuilder<Output, PIN_NUM> {
-    pub fn new(port: Port) -> Self {
-        let base = port as u32;
+impl<const PORT_NUM: char, const PIN_NUM: u8> PinBuilder<Output, PORT_NUM, PIN_NUM> {
+    pub fn new() -> Self {
+        let base = match PORT_NUM {
+            'A' => 0x5000_0000,
+            'B' => 0x5000_0400,
+            'F' => 0x5000_1400,
+            _   => panic!()
+        };
 
         let builder = Self { 
             reg: unsafe {
-                Gpio {
+                Pin {
                     moder  : VolatilePtr::new(NonNull::new_unchecked((base + 0x00) as *mut u32)),
                     otyper : VolatilePtr::new(NonNull::new_unchecked((base + 0x04) as *mut u32)),
                     ospeedr: VolatilePtr::new(NonNull::new_unchecked((base + 0x08) as *mut u32)),
@@ -199,13 +229,18 @@ impl<const PIN_NUM: u8> GpioBuilder<Output, PIN_NUM> {
     }
 }
 
-impl<const PIN_NUM: u8> GpioBuilder<AltFunc, PIN_NUM> {
-    pub fn new(port: Port) -> Self {
-        let base = port as u32;
+impl<const PORT_NUM: char, const PIN_NUM: u8> PinBuilder<AltFunc, PORT_NUM, PIN_NUM> {
+    pub fn new() -> Self {
+        let base = match PORT_NUM {
+            'A' => 0x5000_0000,
+            'B' => 0x5000_0400,
+            'F' => 0x5000_1400,
+            _   => panic!()
+        };
 
         let builder = Self { 
             reg: unsafe {
-                Gpio {
+                Pin {
                     moder  : VolatilePtr::new(NonNull::new_unchecked((base + 0x00) as *mut u32)),
                     otyper : VolatilePtr::new(NonNull::new_unchecked((base + 0x04) as *mut u32)),
                     ospeedr: VolatilePtr::new(NonNull::new_unchecked((base + 0x08) as *mut u32)),
@@ -227,15 +262,30 @@ impl<const PIN_NUM: u8> GpioBuilder<AltFunc, PIN_NUM> {
 
         builder
     }
+
+    pub fn func(self, func: AltFuncNum) -> Self {
+        if PIN_NUM > 7 {
+            self.reg.afrl.update(|val| set_bit!(val, PIN_NUM * 4, 0b1111, func as u32)); 
+        } else {
+            self.reg.afrh.update(|val| set_bit!(val, PIN_NUM * 4, 0b1111, func as u32)); 
+        }
+
+        self
+    }
 }
 
-impl<const PIN_NUM: u8> GpioBuilder<Analog, PIN_NUM> {
-    pub fn new(port: Port) -> Self {
-        let base = port as u32;
+impl<const PORT_NUM: char, const PIN_NUM: u8> PinBuilder<Analog, PORT_NUM, PIN_NUM> {
+    pub fn new() -> Self {
+        let base = match PORT_NUM {
+            'A' => 0x5000_0000,
+            'B' => 0x5000_0400,
+            'F' => 0x5000_1400,
+            _   => panic!()
+        };
 
         let builder = Self { 
             reg: unsafe {
-                Gpio {
+                Pin {
                     moder  : VolatilePtr::new(NonNull::new_unchecked((base + 0x00) as *mut u32)),
                     otyper : VolatilePtr::new(NonNull::new_unchecked((base + 0x04) as *mut u32)),
                     ospeedr: VolatilePtr::new(NonNull::new_unchecked((base + 0x08) as *mut u32)),

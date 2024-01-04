@@ -2,7 +2,7 @@ use core::ptr::NonNull;
 
 use volatile::VolatilePtr;
 
-use crate::{gpio::Port, set_bit};
+use crate::set_bit;
 
 pub struct Rcc {
     cr:       VolatilePtr<'static, u32>,    // 0x00
@@ -30,13 +30,57 @@ pub struct RccBuilder {
     reg: Rcc,
 }
 
+pub enum DivCoeff {
+    Div1    = 0b000,
+    Div2    = 0b001,
+    Div4    = 0b010,
+    Div8    = 0b011,
+    Div16   = 0b100,
+    Div32   = 0b101,
+    Div64   = 0b110,
+    Div128  = 0b111,
+}
+
 impl Rcc {
-    pub fn enable_port(&self, port: Port) {
+    pub fn enable_port(&self, port: char) {
         match port {
-            Port::GPIOA => self.iopenr.update(|val| set_bit!(val, 0, 0b01, 0b01)),
-            Port::GPIOB => self.iopenr.update(|val| set_bit!(val, 1, 0b01, 0b01)),
-            Port::GPIOF => self.iopenr.update(|val| set_bit!(val, 5, 0b01, 0b01)),
+            'A' => self.iopenr.update(|val| set_bit!(val, 0, 0b01, 0b01)),
+            'B' => self.iopenr.update(|val| set_bit!(val, 1, 0b01, 0b01)),
+            'F' => self.iopenr.update(|val| set_bit!(val, 5, 0b01, 0b01)),
+            _   => panic!()
         }
+    }
+
+    pub fn hsi_on(&self) {
+        self.cr.update(|val| set_bit!(val, 8, 0b01, 0b01));
+    }
+
+    pub fn hsi_off(&self) {
+        self.cr.update(|val| set_bit!(val, 8, 0b01, 0b00));
+    }
+
+    pub fn hse_on(&self) {
+        self.cr.update(|val| set_bit!(val, 17, 0b01, 0b01));
+    }
+
+    pub fn hse_css_on(&self) {
+        self.cr.update(|val| set_bit!(val, 19, 0b01, 0b01));
+    }
+
+    pub fn hse_off(&self) {
+        self.cr.update(|val| set_bit!(val, 17, 0b01, 0b00));
+    }
+
+    pub fn pll_on(&self) {
+        self.cr.update(|val| set_bit!(val, 24, 0b01, 0b01));
+    }
+
+    pub fn pll_off(&self) {
+        self.cr.update(|val| set_bit!(val, 24, 0b01, 0b00));
+    }
+
+    pub fn set_hsi_div(&self, coeff: DivCoeff) {
+        self.cr.update(|val| set_bit!(val, 11, 0b111, coeff as u32));
     }
 
     pub fn hsi_ready(&self) -> bool {
@@ -103,8 +147,56 @@ impl RccBuilder {
         self.reg
     }
 
-    pub fn enable_port(self, port: Port) -> Self {
+    pub fn enable_port(self, port: char) -> Self {
         self.reg.enable_port(port);
+
+        self
+    }
+
+    pub fn hsi_on(self) -> Self {
+        self.reg.cr.update(|val| set_bit!(val, 8, 0b01, 0b01));
+
+        self
+    }
+
+    pub fn hsi_off(self) -> Self {
+        self.reg.cr.update(|val| set_bit!(val, 8, 0b01, 0b00));
+
+        self
+    }
+
+    pub fn hse_on(self) -> Self {
+        self.reg.cr.update(|val| set_bit!(val, 17, 0b01, 0b01));
+
+        self
+    }
+
+    pub fn hse_css_on(self) -> Self {
+        self.reg.cr.update(|val| set_bit!(val, 19, 0b01, 0b01));
+
+        self
+    }
+
+    pub fn hse_off(self) -> Self {
+        self.reg.cr.update(|val| set_bit!(val, 17, 0b01, 0b00));
+
+        self
+    }
+
+    pub fn pll_on(self) -> Self {
+        self.reg.cr.update(|val| set_bit!(val, 24, 0b01, 0b01));
+
+        self
+    }
+
+    pub fn pll_off(self) -> Self {
+        self.reg.cr.update(|val| set_bit!(val, 24, 0b01, 0b00));
+
+        self
+    }
+
+    pub fn set_hsi_div(self, coeff: DivCoeff) -> Self {
+        self.reg.cr.update(|val| set_bit!(val, 11, 0b111, coeff as u32));
 
         self
     }

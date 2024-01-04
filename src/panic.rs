@@ -1,14 +1,14 @@
 use core::panic::PanicInfo;
 
-use crate::{rcc::RccBuilder, gpio::{Port, Output, GpioBuilder}};
+use crate::{rcc::RccBuilder, gpio::{Output, PinBuilder}};
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     let _rcc = RccBuilder::new()
-        .enable_port(Port::GPIOB)
+        .enable_port('B')
         .build();
 
-    let mut led = GpioBuilder::<Output, 1>::new(Port::GPIOB)
+    let led = PinBuilder::<Output, 'B', 1>::new()
         .build();
 
     led.set();

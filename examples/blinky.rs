@@ -4,9 +4,8 @@
 use air001_rs::{
     entry, 
     gpio::{
-        Port, 
         Output, 
-        GpioBuilder
+        PinBuilder
     }, 
     rcc::RccBuilder, 
     timer::systick::{
@@ -18,7 +17,7 @@ use air001_rs::{
 #[entry]
 fn main() -> ! {
     let _rcc = RccBuilder::new()
-        .enable_port(Port::GPIOB)
+        .enable_port('B')
         .build();
 
     let mut sys_tick = SysTickBuilder::new()
@@ -27,7 +26,7 @@ fn main() -> ! {
         .set_reload(8_000)
         .build();
 
-    let mut led = GpioBuilder::<Output, 0>::new(Port::GPIOB)
+    let mut led = PinBuilder::<Output, 'B', 0>::new()
         .build();
 
     led.toggle();
